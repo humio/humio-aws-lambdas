@@ -1,12 +1,12 @@
-# aws-lambdas
+# humio-aws-lambdas
 
-This repository is a _beta_ release of a growing set of AWS lambda functions that facilitate data ingest from various AWS services into Humio.
+This repository is a _beta_ initial release of a growing set of AWS lambda functions that facilitate data ingest from various AWS services into Humio.
 
-For CloudWatch integration, please refer to the [cloudwatch2humio](https://github.com/humio/cloudwatch2humio) project.
+For CloudWatch logs & metrics integration, please refer to the [cloudwatch2humio](https://github.com/humio/cloudwatch2humio) project.
 
 ## Vision
 
-The goal of the `aws-lambdas` Humio project is to create a simple, and easy to manage and use lambda to ingest select AWS data into Humio.
+The goal of the `humio-aws-lambdas` Humio project is to create a simple, easy to manage and use lambda to ingest select AWS data into Humio.
 
 ## Current Supported Integrations
 
@@ -14,7 +14,7 @@ The goal of the `aws-lambdas` Humio project is to create a simple, and easy to m
 
 ## Universal Installation & Configuration
 
-This section describes the universal build and installation procedure for all current `aws-lambdas` integrations.
+This section describes the universal build and installation procedure for all current `humio-aws-lambdas` integrations.
 
 ### Requirements
 
@@ -27,6 +27,8 @@ This section describes the universal build and installation procedure for all cu
 
 ### Basic Lambda Settings
 
+The required AWS Lambda properties are:
+
 Property | Description
 -------- | -----------
 Runtime | `Python 3.7`
@@ -36,15 +38,20 @@ Timeout | `0 min 10sec`
 
 ### Environment Variables
 
-Because this project creates the basis for a stack of lambdas that will power many Humio-AWS integrations, there are both "universal" environment variables which apply to all integration components, as well as "specific" environment variables that apply to individual integrations.
+Because this project creates the basis for a stack of lambdas that will power many Humio-AWS integrations, there are both "_universal_" environment variables which apply to _all_ integration components, as well as "_specific_" environment variables that apply to individual integrations.
 
-The "universal" environment variables are related to the location of the Humio service you're integrating with (`HumioBaseURL`), the Humio integration module that supports the AWS service you're integrating with (`HumioAWSModule`) and the method and details by which the Humio ingest token is retrieved (see below).
+The universal environment variables are:
+- `HumioBaseURL`, the location of the Humio service you're integrating with, 
+- `HumioAWSModule`, the Humio integration module that supports the AWS service you're integrating with, and
+- the method and details by which the Humio ingest token is retrieved, one of
+	- `HumioIngestToken`, the plaintext Humio repo ingest token, or
+	- to use the AWS Secrets Manager, using `HumioIngestTokenArn` and `HumioIngestTokenSecret` (see below).
 
 "Universal" environment variables are described below:
 
 Key | Description
 -------- | -----------
-HumioAWSModule | This variable's value parameterizes the integration the Lambda instance, e.g., for `GuardDuty` via `CloudWatch` events, you would use the value `GuardDutyViaCloudWatch`.
+HumioAWSModule | This variable's value parameterizes the integration the Lambda instance, e.g., for `GuardDuty` via `CloudWatch` events, you would use the value `GuardDutyViaCloudWatch`.  See the section "Current Integrations" below for specific details on each available integration.
 HumioBaseURL | The base URL of your Humio install or cloud endpoint, e.g., `https://cloud.us.humio.com`
 
 #### Environment Variables: Plaintext Ingest Token
@@ -60,13 +67,23 @@ Key | Description
 HumioIngestTokenArn | Secret manager ARN for ingest token (e.g., `arn:aws:secretsmanager:us-east-1:...:secret:...`)
 HumioIngestTokenSecret | Secret name (e.g., `HUMIO_INGEST_KEY`)
 
+
+
 ## Current Integrations
 
 This section provides details for each currently supported AWS service integration.
 
-### GuardDutyViaCloudWatch
+### GuardDuty via CloudWatch
 
-No specific configuration is required for this integration module.  Typically, the Lambda trigger will be set up via a CloudWatch event rule (e.g., `source` of `aws.guardduty`, `detail-type` of `GuardDuty Finding`, etc.).
+#### Configuration
+
+In addition to the universal environment variables specified above, to enable the `GuardDutyViaCloudWatch` module for GuardDuty integration via CloudWatch, the following environment variable must be set:
+
+Key | Value
+-------- | -----------
+HumioAWSModule | `GuardDutyViaCloudWatch`
+
+Apart from this, no further specific configuration is required for this integration module.  Typically, the Lambda trigger will be set up via a CloudWatch event rule (e.g., `source` of `aws.guardduty`, `detail-type` of `GuardDuty Finding`, etc.).
 
 ## Governance
 This project is maintained by employees at Humio ApS.
