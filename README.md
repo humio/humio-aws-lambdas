@@ -10,7 +10,8 @@ The goal of the `humio-aws-lambdas` Humio project is to create a simple, easy to
 
 ## Current Supported Integrations
 
-- GuardDuty via CloudWatch Events
+- `GuardDutyViaCloudWatch`: GuardDuty via CloudWatch Events
+- `S3JSONToHEC`: JSON object per line, via S3
 
 ## Universal Installation & Configuration
 
@@ -35,6 +36,10 @@ Runtime | `Python 3.7`
 Handler | `HumioLambda.lambda_handler`
 Memory | `128`
 Timeout | `0 min 10sec`
+
+#### Note: `Timeout`
+
+Regarding `Timeout`, different modules may require this value to be increased.  As an example, when using the `S3JSONToHEC` module, typical execution times will effectively depend on the volume and rate of files being produced.
 
 ### Environment Variables
 
@@ -68,12 +73,11 @@ HumioIngestTokenArn | Secret manager ARN for ingest token (e.g., `arn:aws:secret
 HumioIngestTokenSecret | Secret name (e.g., `HUMIO_INGEST_KEY`)
 
 
-
 ## Current Integrations
 
 This section provides details for each currently supported AWS service integration.
 
-### GuardDuty via CloudWatch
+### GuardDutyViaCloudWatch
 
 #### Configuration
 
@@ -85,7 +89,32 @@ HumioAWSModule | `GuardDutyViaCloudWatch`
 
 Apart from this, no further specific configuration is required for this integration module.  Typically, the Lambda trigger will be set up via a CloudWatch event rule (e.g., `source` of `aws.guardduty`, `detail-type` of `GuardDuty Finding`, etc.).
 
+### S3JSONToHEC
+
+The `S3JSONToHEC` module is used with a trigger on `PUT` to an S3 bucket, and expects data formatted as one JSON object per line.
+
+When a `PUT` operation to an S3 bucket triggers the `S3JSONToHEC` moduel, it streams the newly-put S3 object in, reading it line-by-line as it streams, sending events in batches.
+
+#### Configuration
+
+In addition to the universal environment variables specified above, to enable the `S3JSONToHEC` module for GuardDuty integration via CloudWatch, the following environment variable must be set:
+
+Key | Value
+-------- | -----------
+HumioAWSModule | `S3JSONToHEC`
+
+Optionally, you may tune the batch size this module uses:
+
+Key | Description
+-------- | -----------
+HumioS3JSONToHECBatchSize | _Integer values only_, representing the size of event batches it sends to a Humio HEC endpoint, e.g. `20000`.  Default value is `10000`.
+
+#### Note: Lambda Timeout & Batch Size
+
+When testing this module, be sure to ensure the lambda execution time limit is long enough to accommodate the greatest file size you expect to encounter.  This will be different for each individual setup; one option is to, during testing and while monitoring in production, look at CloudWatch logs in the monitoring tab of your lambda, specifically `DurationInMS`, ensuring that value is smaller than your maximum lambda invocation time for any given invocation.  Increasing lambda execution timeout, as well as `HumioS3JSONToHECBatchSize` are two ways you can ensure this is the case.
+
 ## Governance
+
 This project is maintained by employees at Humio ApS.
 As a general rule, only employees at Humio can become maintainers and have commit privileges to this repository.
 Therefore, if you want to contribute to the project, which we very much encourage, you must first fork the repository.

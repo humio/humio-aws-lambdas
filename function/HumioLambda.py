@@ -15,7 +15,7 @@ logger.setLevel(logging.INFO)
 patch_all()
 
 client = boto3.client('lambda')
-client.get_account_settings()
+#client.get_account_settings()
 
 ## if Amazon Secrets Manager ARN detected, use that, otherwise assume plaintext
 
