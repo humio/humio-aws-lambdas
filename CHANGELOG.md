@@ -5,6 +5,8 @@ Initial beta release.
 
 ### Added 
 - GuardDutyViaCloudWatch integration.
+- S3JSON integration.
+- S3Raw integration.
 
 ### Changed
 

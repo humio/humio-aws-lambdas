@@ -11,7 +11,8 @@ The goal of the `humio-aws-lambdas` Humio project is to create a simple, easy to
 ## Current Supported Integrations
 
 - `GuardDutyViaCloudWatch`: GuardDuty via CloudWatch Events
-- `S3JSONToHEC`: JSON object per line, via S3
+- `S3JSON`: JSON object per line, via S3
+- `S3Raw`: Raw text, per line, via S3
 
 ## Universal Installation & Configuration
 
@@ -34,12 +35,12 @@ Property | Description
 -------- | -----------
 Runtime | `Python 3.7`
 Handler | `HumioLambda.lambda_handler`
-Memory | `128`
+Memory | `128` MB
 Timeout | `0 min 10sec`
 
-#### Note: `Timeout`
+#### Note: `Timeout` & `Memory`
 
-Regarding `Timeout`, different modules may require this value to be increased.  As an example, when using the `S3JSONToHEC` module, typical execution times will effectively depend on the volume and rate of files being produced.
+Regarding `Timeout` and `Memory`, different modules may require these values to be increased.  See the "Notes" section at the end of this document for more information.
 
 ### Environment Variables
 
@@ -52,7 +53,7 @@ The universal environment variables are:
 	- `HumioIngestToken`, the plaintext Humio repo ingest token, or
 	- to use the AWS Secrets Manager, using `HumioIngestTokenArn` and `HumioIngestTokenSecret` (see below).
 
-"Universal" environment variables are described below:
+Universal environment variables are described below:
 
 Key | Description
 -------- | -----------
@@ -89,29 +90,64 @@ HumioAWSModule | `GuardDutyViaCloudWatch`
 
 Apart from this, no further specific configuration is required for this integration module.  Typically, the Lambda trigger will be set up via a CloudWatch event rule (e.g., `source` of `aws.guardduty`, `detail-type` of `GuardDuty Finding`, etc.).
 
-### S3JSONToHEC
+### S3JSON
 
-The `S3JSONToHEC` module is used with a trigger on `PUT` to an S3 bucket, and expects data formatted as one JSON object per line.
+The `S3JSON` module is used with a trigger on `PUT` to an S3 bucket, and expects data formatted as one JSON object per line.
 
-When a `PUT` operation to an S3 bucket triggers the `S3JSONToHEC` moduel, it streams the newly-put S3 object in, reading it line-by-line as it streams, sending events in batches.
+When a `PUT` operation to an S3 bucket triggers the `S3JSON` module, it streams the newly-put S3 object in, reading it line-by-line as it streams, sending events in batches.
 
 #### Configuration
 
-In addition to the universal environment variables specified above, to enable the `S3JSONToHEC` module for GuardDuty integration via CloudWatch, the following environment variable must be set:
+In addition to the universal environment variables specified above, to enable the `S3JSON` module the following environment variable must be set:
 
 Key | Value
 -------- | -----------
-HumioAWSModule | `S3JSONToHEC`
+HumioAWSModule | `S3JSON`
 
 Optionally, you may tune the batch size this module uses:
 
 Key | Description
 -------- | -----------
-HumioS3JSONToHECBatchSize | _Integer values only_, representing the size of event batches it sends to a Humio HEC endpoint, e.g. `20000`.  Default value is `10000`.
+HumioS3JSONBatchSize | _Integer values only_, representing the size of event batches it sends to a Humio HEC endpoint, e.g. `20000`.  Default value is `10000`.
 
-#### Note: Lambda Timeout & Batch Size
+### S3Raw
 
-When testing this module, be sure to ensure the lambda execution time limit is long enough to accommodate the greatest file size you expect to encounter.  This will be different for each individual setup; one option is to, during testing and while monitoring in production, look at CloudWatch logs in the monitoring tab of your lambda, specifically `DurationInMS`, ensuring that value is smaller than your maximum lambda invocation time for any given invocation.  Increasing lambda execution timeout, as well as `HumioS3JSONToHECBatchSize` are two ways you can ensure this is the case.
+The `S3Raw` module is used with a trigger on `PUT` to an S3 bucket, and expects data to be newline-delimited free text.
+
+When a `PUT` operation to an S3 bucket triggers the `S3Raw` module, it streams the newly-put S3 object in, reading it line-by-line as it streams, sending events in batches.
+
+#### Parsing Consideration
+
+By default, when raw text is supplied to ingest, the default parser is `kvparser` for `key=value` pairs.  To use a different parser, [do so through a new ingest token](https://docs.humio.com/ingesting-data/ingest-tokens/) (in particular, [assigning parsers to ingest tokens](https://docs.humio.com/ingesting-data/parsers/assigning-parsers-to-ingest-tokens/)).
+
+#### Configuration
+
+In addition to the universal environment variables specified above, to enable the `S3Raw` module the following environment variable must be set:
+
+Key | Value
+-------- | -----------
+HumioAWSModule | `S3Raw`
+
+Optionally, you may tune the batch size this module uses:
+
+Key | Description
+-------- | -----------
+HumioS3RawBatchSize | _Integer values only_, representing the size of event batches it sends to a Humio HEC endpoint, e.g. `20000`.  Default value is `10000`.
+
+
+## Notes
+
+### Lambda Timeout
+
+When testing these modules, be sure to ensure the lambda execution time limit is long enough to accommodate the greatest data volume you expect to encounter.  This will be different for every system; one option is to, during testing and while monitoring in production, look at CloudWatch logs in the monitoring tab of your lambda, specifically `DurationInMS`, ensuring that value is smaller than your maximum lambda invocation time for any given invocation.  
+
+### Lambda Memory
+
+Like lambda timeout values, available memory may have to be adjusted, depending on your data volumes.  This is adjustable via the "Basic Settings" panel in the lambda console.
+
+### Batch Size
+
+When applicable, increasing module batch sizes (e.g., `HumioS3RawBatchSize`, `HumioS3JSONBatchSize`, etc.) can greatly increase throughput.  This will likely take some balancing with lambda timeout values.
 
 ## Governance
 
