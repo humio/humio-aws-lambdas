@@ -7,6 +7,7 @@ Initial beta release.
 - GuardDutyViaCloudWatch integration.
 - S3JSON integration.
 - S3Raw integration.
+- Kinesis integration.
 
 ### Changed
 

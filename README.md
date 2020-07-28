@@ -13,6 +13,7 @@ The goal of the `humio-aws-lambdas` Humio project is to create a simple, easy to
 - `GuardDutyViaCloudWatch`: GuardDuty via CloudWatch Events
 - `S3JSON`: JSON object per line, via S3
 - `S3Raw`: Raw text, per line, via S3
+- `Kinesis`: Kinesis, per put record, raw text or JSON
 
 ## Universal Installation & Configuration
 
@@ -134,6 +135,49 @@ Key | Description
 -------- | -----------
 HumioS3RawBatchSize | _Integer values only_, representing the size of event batches it sends to a Humio HEC endpoint, e.g. `20000`.  Default value is `10000`.
 
+
+### Kinesis
+
+The `Kinesis` module is used with a trigger on an AWS Kinesis stream.  All Lambda trigger configurations are supported, though they can have varying effects on downstream data.  For more information, read [Using AWS Lambda with Amazon Kinesis
+](https://docs.aws.amazon.com/lambda/latest/dg/with-kinesis.html)
+
+#### Parsing Consideration
+
+By default, when raw text is supplied to ingest, the default parser is `kvparser` for `key=value` pairs.  To use a different parser, [do so through a new ingest token](https://docs.humio.com/ingesting-data/ingest-tokens/) (in particular, [assigning parsers to ingest tokens](https://docs.humio.com/ingesting-data/parsers/assigning-parsers-to-ingest-tokens/)).
+
+If records are put to the Kinesis stream in JSON format, you should use the `HumioKinesisDataType` configuration environment variable, setting it to `json` (see below).
+
+Every record ingested via this module will have the following fields:
+
+Key | Description
+--- | -----------
+awsRegion | AWS Region, e.g., `us-east-1`
+eventID | e.g., `shardId-000000000003:4234496093157802...`
+eventName | `aws:kinesis:record`
+eventSource | `aws:kinesis`
+eventSourceARN | e.g., `arn:aws:kinesis:us-east-1:041844444...:stream/some-kinesis-stream`
+eventVersion | AWS Kinesis event version, e.g., `1.0`
+invokeIdentityArn | AWS Lambda invocation identity ARN, e.g., `arn:aws:iam::1234...:role/service-role/test-kinesis-lambda-role-prb3lol8ez1`
+kinesis.approximateArrivalTimestamp | Approximate message arrival time as determined by AWS Kinesis, e.g., `1595965460.13`
+kinesis.data[.*] | When `HumioKinesisDataType` is `json`, the Kinesis message content is interpreted as JSON and the object lives under `kinesis.data...`.  When `HumioKinesisDataType` is `raw`, the text interpretation of the data will live under `kinesis.data`
+kinesis.kinesisSchemaVersion | Current Kinesis schema version in use, e.g., `1.0`
+kinesis.partitionKey | The value used to assign this message to a Kinesis shard
+kinesis.sequenceNumber | Kinesis-assigned [sequence number](https://docs.aws.amazon.com/streams/latest/dev/key-concepts.html).
+
+#### Configuration
+
+In addition to the universal environment variables specified above, to enable the `Kinesis` module the following environment variable must be set:
+
+Key | Value
+-------- | -----------
+HumioAWSModule | `Kinesis`
+
+Optionally, you may specify an expected data type to interpret the event payload, or tune the batch size this module uses:
+
+Key | Description
+-------- | -----------
+HumioKinesisDataType | _One_ of `raw` or `json`.  `raw` causes the Kinesis records to be interpreted as UTF-8 text.  `json` causes the Kinesis records to be interpreted as JSON objects.  Default is `raw`.
+HumioKinesisBatchSize | _Integer values only_, representing the size of event batches it sends to a Humio HEC endpoint, e.g. `20000`.  Default value is `10000`.
 
 ## Notes
 
