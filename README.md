@@ -105,22 +105,25 @@ Key | Description
 awsRegion | AWS Region, e.g., `us-east-1`
 eventName | e.g., `ObjectCreated:Put`
 eventSource | `aws:s3`
-eventTime | ...
-eventVersion | AWS S3 event version, e.g., `2.1`
-requestParameters.sourceIPAddress | e.g., `1.2.3.4`
-responseElements.x-amz-request-id | ...
-responseElements.x-amz-id-2 | ...
+eventTime | The time, in ISO-8601 format, for example, 1970-01-01T00:00:00.000Z, when Amazon S3 finished processing the request.
+eventVersion | AWS S3 event version, e.g., `2.1`.
+requestParameters.sourceIPAddress | IP address where request came from, e.g., `1.2.3.4`.
+responseElements.x-amz-request-id | Amazon S3 generated request ID.
+responseElements.x-amz-id-2 | Amazon S3 host that processed the request.
 s3.bucket.arn | e.g., `arn:aws:s3:::some-s3-bucket`
 s3.bucket.name | e.g., `some-s3-bucket`
-s3.bucket.ownerIdentity.principalId | ...
-s3.configurationId | ...
+s3.bucket.ownerIdentity.principalId | Amazon customer ID of the bucket owner.
+s3.configurationId | ID found in the bucket notification configuration.
 s3.object.eTag | e.g., `0f3a06bda0647ed09b0f951...`
 s3.object.key | e.g., `some-filename.json`
-s3.object.seq	uencer | ...
+s3.object.sequencer | a string representation of a hexadecimal value used to determine event sequence, only used with `PUT` and `DELETE` operations.
 s3.object.size | Object size, in bytes, e.g., `8742`
+s3.object.versionId | Object version if bucket is versioning-enabled, otherwise not present.
 s3.s3SchemaVersion | e.g., `1.0`
-userIdentity.principalId | ...
+userIdentity.principalId | Amazon customer ID of the user who caused the event.
 data[.*] | If `HumioS3DataType` is `raw` or `json`, S3 object content is interpreted and is stored in this field.  This field is _not_ present if `HumioS3DataType` is `metadata`.  For more information, see below.
+
+For more information, consult the [Event message structure AWS documentation](https://docs.aws.amazon.com/AmazonS3/latest/dev/notification-content-structure.html).
 
 #### Configuration
 
