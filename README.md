@@ -221,6 +221,48 @@ Key | Description
 HumioSNSDataType | _One_ of `raw` or `json`.  `raw` causes the Kinesis records to be interpreted as UTF-8 text.  `json` causes the SNS message body to be interpreted as a JSON object.  Default is `raw`.
 HumioSNSBatchSize | _Integer values only_, representing the size of event batches it sends to a Humio HEC endpoint, e.g. `20000`.  Default value is `10000`.
 
+### SQS
+
+The `SQS` module is used with a trigger on an AWS SQS queue.
+
+#### Parsing Consideration
+
+By default, when raw text is supplied to ingest, the default parser is `kvparser` for `key=value` pairs.  To use a different parser, [do so through a new ingest token](https://docs.humio.com/ingesting-data/ingest-tokens/) (in particular, [assigning parsers to ingest tokens](https://docs.humio.com/ingesting-data/parsers/assigning-parsers-to-ingest-tokens/)).
+
+If events published to the topic have JSON bodies, you should use the `HumioSQSDataType` configuration environment variable, setting it to `json` (see below).
+
+Every record ingested via this module will have at least the following fields:
+
+Key | Description
+--- | -----------
+attributes.ApproximateFirstReceiveTimestamp | ...
+attributes.ApproximateReceiveCount | ...
+attributes.SenderId | ...
+attributes.SentTimestamp | ...
+awsRegion | e.g., `us-east-1`
+body[.*] | ... 
+eventSource | `aws:sqs`
+eventSourceARN | e.g., `arn:aws:sqs:us-east-1:012345...:some-queue`
+md5OfBody | ...
+md5OfMessageAttributes | ...
+messageAttributes[.*.dataType/stringValue] | ...
+messageId | e.g., `fae08ce4-1234-4a12-437d-7e630983d7fe`
+receiptHandle | e.g., `AQEBe+YFEcv00EQKq1toMPrC1paj0yGQk2Kd/...`
+
+#### Configuration
+
+In addition to the universal environment variables specified above, to enable the `Kinesis` module the following environment variable must be set:
+
+Key | Value
+-------- | -----------
+HumioAWSModule | `SQS`
+
+Optionally, you may specify an expected data type to interpret the event payload, or tune the batch size this module uses:
+
+Key | Description
+-------- | -----------
+HumioSQSDataType | _One_ of `raw` or `json`.  `raw` causes the Kinesis records to be interpreted as UTF-8 text.  `json` causes the SQS message body to be interpreted as a JSON object.  Default is `raw`.
+HumioSQSBatchSize | _Integer values only_, representing the size of event batches it sends to a Humio HEC endpoint, e.g. `20000`.  Default value is `10000`.
 
 ## Notes
 
