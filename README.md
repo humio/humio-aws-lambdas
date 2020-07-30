@@ -234,19 +234,21 @@ Every record ingested via this module will have at least the following fields:
 
 Key | Description
 --- | -----------
-attributes.ApproximateFirstReceiveTimestamp | ...
-attributes.ApproximateReceiveCount | ...
-attributes.SenderId | ...
-attributes.SentTimestamp | ...
+attributes.ApproximateFirstReceiveTimestamp | The time the message was first received from the queue (epoch time in milliseconds).
+attributes.ApproximateReceiveCount | The number of times a message has been received across all queues but not deleted.
+attributes.SenderId | For an IAM user, returns the IAM user ID, e.g., `ABCDEFGHI1JKLMNOPQ23R`.  For an IAM role, returns the IAM role ID, e.g., `ABCDE1F2GH3I4JK5LMNOP:i-a123b456`.
+attributes.SentTimestamp | The time the message was sent to the queue (epoch time in milliseconds).
 awsRegion | e.g., `us-east-1`
-body[.*] | ... 
+body[.*] | The body of the SQS message, either as text or as a JSON object, depending on the setting of `HumioSQSDataType` (see below).
 eventSource | `aws:sqs`
 eventSourceARN | e.g., `arn:aws:sqs:us-east-1:012345...:some-queue`
-md5OfBody | ...
-md5OfMessageAttributes | ...
+md5OfBody | An MD5 digest of the non-URL-encoded message body string.
+md5OfMessageAttributes | An MD5 digest of the non-URL-encoded message attribute string. You can use this attribute to verify that Amazon SQS received the message correctly. Amazon SQS URL-decodes the message before creating the MD5 digest.
 messageAttributes[.*.dataType/stringValue] | ...
-messageId | e.g., `fae08ce4-1234-4a12-437d-7e630983d7fe`
-receiptHandle | e.g., `AQEBe+YFEcv00EQKq1toMPrC1paj0yGQk2Kd/...`
+messageId | A unique identifier for the message. A MessageIdis considered unique across all AWS accounts for an extended period of time. e.g., `fae08ce4-1234-4a12-437d-7e630983d7fe`
+receiptHandle | An identifier associated with the act of receiving the message. A new receipt handle is returned every time you receive a message. When deleting a message, you provide the last received receipt handle to delete the message. e.g., `AQEBe+YFEcv00EQKq1toMPrC1paj0yGQk2Kd/...`
+
+For more information, see AWS documentation entitled [An Amazon SQS Message](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/APIReference/API_Message.html).
 
 #### Configuration
 
