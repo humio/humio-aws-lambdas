@@ -95,9 +95,9 @@ Apart from this, no further specific configuration is required for this integrat
 
 ### S3
 
-The `S3` module is used with a trigger on `PUT` to an S3 bucket, and has varying functionality depending on configuration (see below).
+The `S3` module is used with a trigger on an S3 bucket, and has varying functionality depending on configuration (see below).
 
-When a `PUT` operation to an S3 bucket triggers the `S3` module, in the case of `HumioS3DataType` configuration value being `raw` or `json`, it streams the newly-put S3 object in, reading it line-by-line as it streams, sending events in batches; in the case of `HumioS3DataType` configuration value being `metadata`, only S3 event metadata is sent to Humio (S3 object contents are not accessed).
+When an operation to an S3 bucket triggers the `S3` module, in the case of `HumioS3DataType` configuration value being `raw` or `json`, and the S3 operation being a `PUT`, it streams the newly-put S3 object in, reading it line-by-line as it streams, sending events in batches; in the case of `HumioS3DataType` configuration value being `metadata`, typically multiple triggers or a trigger on all S3 operations are used, and only S3 event metadata is sent to Humio (S3 object bodies are not accessed).
 
 Every record ingested via this module will have at least following fields:
 
