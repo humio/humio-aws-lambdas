@@ -197,9 +197,10 @@ Key | Description
 Sns.Message[.*] | The body of the SNS message, either as text or as a JSON object, depending on the setting of `HumioSNSDataType` (see below).
 Sns.MessageAttributes[.*.Type/Value] | Any attributes attached the SNS message (see [Amazon SNS message attributes](https://docs.aws.amazon.com/sns/latest/dg/sns-message-attributes.html))
 Sns.MessageId | From [AWS Documentation](https://docs.aws.amazon.com/sns/latest/dg/sns-message-and-json-formats.html): "A Universally Unique Identifier, unique for each message published. For a notification that Amazon SNS resends during a retry, the message ID of the original message is used."
-Sns.Signature | ...
-Sns.SignatureVersion | ...
-Sns.SigningCertUrl | ...
+Sns.Signature | Base64-encoded SHA1withRSA signature of the Message, MessageId, Subject (if present), Type,
+Timestamp, and TopicArn values.
+Sns.SignatureVersion | Version of the Amazon SNS signature used.
+Sns.SigningCertUrl | The URL to the certificate that was used to sign the message.
 Sns.Subject | Text of SNS message subject
 Sns.Timestamp | e.g., `2020-07-29T16:43:36.024Z`
 Sns.TopicArn | Topic ARN SNS message was published to, e.g., `arn:aws:sns:us-east-1:01234....:some-topic`
