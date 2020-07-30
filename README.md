@@ -11,11 +11,10 @@ The goal of the `humio-aws-lambdas` Humio project is to create a simple, easy to
 ## Current Supported Integrations
 
 - `GuardDutyViaCloudWatch`: GuardDuty via CloudWatch Events
-- `S3`: S3, raw text, JSON data handling, or metadata-only events
+- `S3`: S3, raw text, JSON data handling, or metadata-only events (`S3JSON` & `S3Raw` are _deprecated_ but still functional)
 - `Kinesis`: Kinesis, per put record, raw text or JSON
 - `SNS`: Simple Notification Service
-- `S3JSON`: JSON object per line, via S3 (deprecated)
-- `S3Raw`: Raw text, per line, via S3 (deprecated)
+- `SQS`: Simple Queue Service
 
 ## Universal Installation & Configuration
 

@@ -5,9 +5,12 @@ Initial beta release.
 
 ### Added 
 - GuardDutyViaCloudWatch integration.
-- S3JSON integration.
-- S3Raw integration.
+- S3JSON deprecation.
+- S3Raw deprecation.
 - Kinesis integration.
+- S3 module consolidation, added metadata-only data type support.
+- SNS integration.
+- SQS integration.
 
 ### Changed
 
