@@ -111,7 +111,7 @@ Key | Description
 awsRegion | AWS Region, e.g., `us-east-1`
 eventName | e.g., `ObjectCreated:Put`
 eventSource | `aws:s3`
-eventTime | The time, in ISO-8601 format, for example, 1970-01-01T00:00:00.000Z, when Amazon S3 finished processing the request.
+eventTime | The time, in ISO-8601 format (e.g., `1970-01-01T00:00:00.000Z`) when Amazon S3 finished processing the request.
 eventVersion | AWS S3 event version, e.g., `2.1`.
 requestParameters.sourceIPAddress | IP address where request came from, e.g., `1.2.3.4`.
 responseElements.x-amz-request-id | Amazon S3 generated request ID.
@@ -122,7 +122,7 @@ s3.bucket.ownerIdentity.principalId | Amazon customer ID of the bucket owner.
 s3.configurationId | ID found in the bucket notification configuration.
 s3.object.eTag | e.g., `0f3a06bda0647ed09b0f951...`
 s3.object.key | e.g., `some-filename.json`
-s3.object.sequencer | a string representation of a hexadecimal value used to determine event sequence, only used with `PUT` and `DELETE` operations.
+s3.object.sequencer | String representation of a hexadecimal value used to determine event sequence, only used with `PUT` and `DELETE` operations.
 s3.object.size | Object size, in bytes, e.g., `8742`
 s3.object.versionId | Object version if bucket is versioning-enabled, otherwise not present.
 s3.s3SchemaVersion | e.g., `1.0`
