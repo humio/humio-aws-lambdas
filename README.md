@@ -245,7 +245,7 @@ eventSource | `aws:sqs`
 eventSourceARN | e.g., `arn:aws:sqs:us-east-1:012345...:some-queue`
 md5OfBody | An MD5 digest of the non-URL-encoded message body string.
 md5OfMessageAttributes | An MD5 digest of the non-URL-encoded message attribute string. You can use this attribute to verify that Amazon SQS received the message correctly. Amazon SQS URL-decodes the message before creating the MD5 digest.
-messageAttributes[.*.dataType/stringValue] | ...
+messageAttributes[.*.dataType/stringValue] | Any attributes attached the SQS message.
 messageId | A unique identifier for the message. A MessageIdis considered unique across all AWS accounts for an extended period of time. e.g., `fae08ce4-1234-4a12-437d-7e630983d7fe`
 receiptHandle | An identifier associated with the act of receiving the message. A new receipt handle is returned every time you receive a message. When deleting a message, you provide the last received receipt handle to delete the message. e.g., `AQEBe+YFEcv00EQKq1toMPrC1paj0yGQk2Kd/...`
 
