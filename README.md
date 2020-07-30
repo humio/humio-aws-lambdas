@@ -11,9 +11,11 @@ The goal of the `humio-aws-lambdas` Humio project is to create a simple, easy to
 ## Current Supported Integrations
 
 - `GuardDutyViaCloudWatch`: GuardDuty via CloudWatch Events
-- `S3JSON`: JSON object per line, via S3
-- `S3Raw`: Raw text, per line, via S3
+- `S3`: S3, raw text, JSON data handling, or metadata-only events
 - `Kinesis`: Kinesis, per put record, raw text or JSON
+- `SNS`: Simple Notification Service
+- `S3JSON`: JSON object per line, via S3 (deprecated)
+- `S3Raw`: Raw text, per line, via S3 (deprecated)
 
 ## Universal Installation & Configuration
 
@@ -91,11 +93,35 @@ HumioAWSModule | `GuardDutyViaCloudWatch`
 
 Apart from this, no further specific configuration is required for this integration module.  Typically, the Lambda trigger will be set up via a CloudWatch event rule (e.g., `source` of `aws.guardduty`, `detail-type` of `GuardDuty Finding`, etc.).
 
-### S3JSON
+### S3
 
-The `S3JSON` module is used with a trigger on `PUT` to an S3 bucket, and expects data formatted as one JSON object per line.
+The `S3` module is used with a trigger on `PUT` to an S3 bucket, and has varying functionality depending on configuration (see below).
 
-When a `PUT` operation to an S3 bucket triggers the `S3JSON` module, it streams the newly-put S3 object in, reading it line-by-line as it streams, sending events in batches.
+When a `PUT` operation to an S3 bucket triggers the `S3` module, in the case of `HumioS3DataType` configuration value being `raw` or `json`, it streams the newly-put S3 object in, reading it line-by-line as it streams, sending events in batches; in the case of `HumioS3DataType` configuration value being `metadata`, only S3 event metadata is sent to Humio (S3 object contents are not accessed).
+
+Every record ingested via this module will have at least following fields:
+
+Key | Description
+--- | -----------
+awsRegion | AWS Region, e.g., `us-east-1`
+eventName | e.g., `ObjectCreated:Put`
+eventSource | `aws:s3`
+eventTime | ...
+eventVersion | AWS S3 event version, e.g., `2.1`
+requestParameters.sourceIPAddress | e.g., `1.2.3.4`
+responseElements.x-amz-request-id | ...
+responseElements.x-amz-id-2 | ...
+s3.bucket.arn | e.g., `arn:aws:s3:::some-s3-bucket`
+s3.bucket.name | e.g., `some-s3-bucket`
+s3.bucket.ownerIdentity.principalId | ...
+s3.configurationId | ...
+s3.object.eTag | e.g., `0f3a06bda0647ed09b0f951...`
+s3.object.key | e.g., `some-filename.json`
+s3.object.seq	uencer | ...
+s3.object.size | Object size, in bytes, e.g., `8742`
+s3.s3SchemaVersion | e.g., `1.0`
+userIdentity.principalId | ...
+data[.*] | If `HumioS3DataType` is `raw` or `json`, S3 object content is interpreted and is stored in this field.  This field is _not_ present if `HumioS3DataType` is `metadata`.  For more information, see below.
 
 #### Configuration
 
@@ -103,38 +129,14 @@ In addition to the universal environment variables specified above, to enable th
 
 Key | Value
 -------- | -----------
-HumioAWSModule | `S3JSON`
+HumioAWSModule | `S3`
+HumioS3DataType | This configuration variable may be _one_ of `raw`, `json`, or `metadata`.  In the case of `raw` and `json`, the S3 object is streamed and interpreted, per line, as text or JSON, emitting one event per line; in the case of a value of `metadata`, only the S3 event metadata is sent, one per event (e.g., a `PUT` operation).  Default value is `metadata`.
 
-Optionally, you may tune the batch size this module uses:
-
-Key | Description
--------- | -----------
-HumioS3JSONBatchSize | _Integer values only_, representing the size of event batches it sends to a Humio HEC endpoint, e.g. `20000`.  Default value is `10000`.
-
-### S3Raw
-
-The `S3Raw` module is used with a trigger on `PUT` to an S3 bucket, and expects data to be newline-delimited free text.
-
-When a `PUT` operation to an S3 bucket triggers the `S3Raw` module, it streams the newly-put S3 object in, reading it line-by-line as it streams, sending events in batches.
-
-#### Parsing Consideration
-
-By default, when raw text is supplied to ingest, the default parser is `kvparser` for `key=value` pairs.  To use a different parser, [do so through a new ingest token](https://docs.humio.com/ingesting-data/ingest-tokens/) (in particular, [assigning parsers to ingest tokens](https://docs.humio.com/ingesting-data/parsers/assigning-parsers-to-ingest-tokens/)).
-
-#### Configuration
-
-In addition to the universal environment variables specified above, to enable the `S3Raw` module the following environment variable must be set:
-
-Key | Value
--------- | -----------
-HumioAWSModule | `S3Raw`
-
-Optionally, you may tune the batch size this module uses:
+Optionally, you may specify tune the batch size this module uses:
 
 Key | Description
 -------- | -----------
-HumioS3RawBatchSize | _Integer values only_, representing the size of event batches it sends to a Humio HEC endpoint, e.g. `20000`.  Default value is `10000`.
-
+HumioS3BatchSize | _Integer values only_, representing the size of event batches it sends to a Humio HEC endpoint, e.g. `20000`.  Default value is `10000`.
 
 ### Kinesis
 
@@ -178,6 +180,47 @@ Key | Description
 -------- | -----------
 HumioKinesisDataType | _One_ of `raw` or `json`.  `raw` causes the Kinesis records to be interpreted as UTF-8 text.  `json` causes the Kinesis records to be interpreted as JSON objects.  Default is `raw`.
 HumioKinesisBatchSize | _Integer values only_, representing the size of event batches it sends to a Humio HEC endpoint, e.g. `20000`.  Default value is `10000`.
+
+### SNS
+
+The `SNS` module is used with a trigger on an AWS SNS topic.
+
+#### Parsing Consideration
+
+By default, when raw text is supplied to ingest, the default parser is `kvparser` for `key=value` pairs.  To use a different parser, [do so through a new ingest token](https://docs.humio.com/ingesting-data/ingest-tokens/) (in particular, [assigning parsers to ingest tokens](https://docs.humio.com/ingesting-data/parsers/assigning-parsers-to-ingest-tokens/)).
+
+If events published to the topic have JSON bodies, you should use the `HumioSNSDataType` configuration environment variable, setting it to `json` (see below).
+
+Every record ingested via this module will have at least the following fields:
+
+Key | Description
+--- | -----------
+Sns.Message[.*] | The body of the SNS message, either as text or as a JSON object, depending on the setting of `HumioSNSDataType` (see below).
+Sns.MessageAttributes[.*.Type/Value] | Any attributes attached the SNS message (see [Amazon SNS message attributes](https://docs.aws.amazon.com/sns/latest/dg/sns-message-attributes.html))
+Sns.MessageId | From [AWS Documentation](https://docs.aws.amazon.com/sns/latest/dg/sns-message-and-json-formats.html): "A Universally Unique Identifier, unique for each message published. For a notification that Amazon SNS resends during a retry, the message ID of the original message is used."
+Sns.Signature | ...
+Sns.SignatureVersion | ...
+Sns.SigningCertUrl | ...
+Sns.Subject | Text of SNS message subject
+Sns.Timestamp | e.g., `2020-07-29T16:43:36.024Z`
+Sns.TopicArn | Topic ARN SNS message was published to, e.g., `arn:aws:sns:us-east-1:01234....:some-topic`
+Sns.Type | One of `SubscriptionConfirmation`, `Notification` or `UnsubscribeConfirmation`
+
+#### Configuration
+
+In addition to the universal environment variables specified above, to enable the `Kinesis` module the following environment variable must be set:
+
+Key | Value
+-------- | -----------
+HumioAWSModule | `SNS`
+
+Optionally, you may specify an expected data type to interpret the event payload, or tune the batch size this module uses:
+
+Key | Description
+-------- | -----------
+HumioSNSDataType | _One_ of `raw` or `json`.  `raw` causes the Kinesis records to be interpreted as UTF-8 text.  `json` causes the SNS message body to be interpreted as a JSON object.  Default is `raw`.
+HumioSNSBatchSize | _Integer values only_, representing the size of event batches it sends to a Humio HEC endpoint, e.g. `20000`.  Default value is `10000`.
+
 
 ## Notes
 
