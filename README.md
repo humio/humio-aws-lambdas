@@ -82,6 +82,10 @@ This section provides details for each currently supported AWS service integrati
 
 ### GuardDutyViaCloudWatch
 
+#### Parsing Consideration
+
+For information on event schema, see the AWS documentation page [CloudWatch event format for GuardDuty](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_findings_cloudwatch.html#guardduty_findings_cloudwatch_format).
+
 #### Configuration
 
 In addition to the universal environment variables specified above, to enable the `GuardDutyViaCloudWatch` module for GuardDuty integration via CloudWatch, the following environment variable must be set:
@@ -95,6 +99,8 @@ Apart from this, no further specific configuration is required for this integrat
 ### S3
 
 The `S3` module is used with a trigger on an S3 bucket, and has varying functionality depending on configuration (see below).
+
+#### Parsing Consideration
 
 When an operation to an S3 bucket triggers the `S3` module, in the case of `HumioS3DataType` configuration value being `raw` or `json`, and the S3 operation being a `PUT`, it streams the newly-put S3 object in, reading it line-by-line as it streams, sending events in batches; in the case of `HumioS3DataType` configuration value being `metadata`, typically multiple triggers or a trigger on all S3 operations are used, and only S3 event metadata is sent to Humio (S3 object bodies are not accessed).
 
